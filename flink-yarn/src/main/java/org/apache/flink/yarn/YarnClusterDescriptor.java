@@ -156,6 +156,44 @@ public class YarnClusterDescriptor implements ClusterDescriptor<ApplicationId> {
 
     private YarnConfigOptions.UserJarInclusion userJarInclusion;
 
+    // -------------------------------------------------------------
+    // Hopsworks variables and methods
+    // -------------------------------------------------------------
+    private final Map<String, String> hopsLocalResources = new HashMap<>();
+    private Path stagingDir;
+    private YarnClientApplication yarnApplication;
+    private GetNewApplicationResponse appResponse;
+
+    public void setStagingDir(Path stagingDir) {
+        this.stagingDir = stagingDir;
+    }
+
+    public void setYarnApplication(YarnClientApplication yarnApplication) {
+        this.yarnApplication = yarnApplication;
+    }
+
+    public void setAppResponse(GetNewApplicationResponse appResponse) {
+        this.appResponse = appResponse;
+    }
+
+    public void addHopsLocalResources(String key, String path) {
+        hopsLocalResources.put(key, path);
+    }
+
+    // -------------------------------------------------------------
+    // Yarn Docker runtime
+    // -------------------------------------------------------------
+    private boolean docker = false;
+    private String dockerImage;
+    private String dockerMounts;
+
+    public void setDocker(String dockerImage, String dockerMounts) {
+        docker = true;
+        this.dockerImage = dockerImage;
+        this.dockerMounts = dockerMounts;
+    }
+    // -------------------------------------------------------------
+
     public YarnClusterDescriptor(
             Configuration flinkConfiguration,
             YarnConfiguration yarnConfiguration,
@@ -555,8 +593,10 @@ public class YarnClusterDescriptor implements ClusterDescriptor<ApplicationId> {
         // --------------
 
         // Create application via yarnClient
-        final YarnClientApplication yarnApplication = yarnClient.createApplication();
-        final GetNewApplicationResponse appResponse = yarnApplication.getNewApplicationResponse();
+        if (yarnApplication == null) {
+            yarnApplication = yarnClient.createApplication();
+            appResponse = yarnApplication.getNewApplicationResponse();
+        }
 
         Resource maxRes = appResponse.getMaximumResourceCapability();
 
@@ -878,6 +918,9 @@ public class YarnClusterDescriptor implements ClusterDescriptor<ApplicationId> {
             addLibFoldersToShipFiles(systemShipFiles);
         }
 
+        // register Hops LocalResources
+        fileUploader.registerHopsLocalResources(hopsLocalResources, yarnConfiguration);
+
         // Register all files in provided lib dirs as local resources with public visibility
         // and upload the remaining dependencies as local resources with APPLICATION visibility.
         final List<String> systemClassPaths = fileUploader.registerProvidedLocalResources();
@@ -1155,6 +1198,12 @@ public class YarnClusterDescriptor implements ClusterDescriptor<ApplicationId> {
             appMasterEnv.put(YarnConfigKeys.ENV_KRB5_PATH, remoteKrb5Path.toString());
         }
 
+        if (docker) {
+            appMasterEnv.put("YARN_CONTAINER_RUNTIME_TYPE", "docker");
+            appMasterEnv.put("YARN_CONTAINER_RUNTIME_DOCKER_IMAGE", dockerImage);
+            appMasterEnv.put("YARN_CONTAINER_RUNTIME_DOCKER_MOUNTS", dockerMounts);
+        }
+
         // set classpath from YARN configuration
         Utils.setupYarnClassPath(yarnConfiguration, appMasterEnv);
 
@@ -1254,11 +1303,14 @@ public class YarnClusterDescriptor implements ClusterDescriptor<ApplicationId> {
      * @return the remote target home directory
      */
     private Path getStagingDir(FileSystem fileSystem) {
+        /*
         final String configuredStagingDir =
                 flinkConfiguration.getString(YarnConfigOptions.STAGING_DIRECTORY);
         return configuredStagingDir != null
                 ? fileSystem.makeQualified(new Path(configuredStagingDir))
                 : fileSystem.getHomeDirectory();
+         */
+        return stagingDir != null ? stagingDir : fileSystem.getHomeDirectory();
     }
 
     private int getFileReplication() {

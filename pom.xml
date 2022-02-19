@@ -92,7 +92,7 @@ under the License.
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<hadoop.version>2.4.1</hadoop.version>
+		<hadoop.version>3.2.0</hadoop.version>
 		<!-- Need to use a user property here because the surefire
 			 forkCount is not exposed as a property. With this we can set
 			 it on the "mvn" commandline in travis. -->
@@ -1302,6 +1302,30 @@ under the License.
 				</pluginManagement>
 			</build>
 		</profile>
+
+		<profile>
+			<id>vendor-repos</id>
+			<activation>
+				<property>
+					<name>vendor-repos</name>
+				</property>
+			</activation>
+			<!-- Add vendor maven repositories -->
+			<repositories>
+				<repository>
+					<id>Hops</id>
+					<name>Hops Repository</name>
+					<url>https://archiva.hops.works/repository/Hops/</url>
+					<releases>
+						<enabled>true</enabled>
+					</releases>
+					<snapshots>
+						<enabled>false</enabled>
+					</snapshots>
+				</repository>
+			</repositories>
+		</profile>
+
 	</profiles>
 
 	<build>

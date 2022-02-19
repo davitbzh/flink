@@ -120,7 +120,7 @@ under the License.
 		</dependency>
 
 		<dependency>
-			<groupId>org.apache.flink</groupId>
+			<groupId>io.hops.flink</groupId>
 			<artifactId>flink-yarn_${scala.binary.version}</artifactId>
 			<version>${project.version}</version>
 			<exclusions>
@@ -684,8 +684,12 @@ under the License.
 								<excludes>
 									<!-- log4j 2 is bundled separately from the flink-dist jar -->
 									<exclude>org.apache.logging.log4j:*</exclude>
-									<!-- Bundled separately so that users can easily switch between ZK 3.4/3.5-->
+									<!-- Bundled separately so that users can easily switch between ZK 3.4/3.5 -->
+									<!-- TODO (Davit):
+									disabling it as there is dependency on `org.apache.flink.shaded.curator4`
+									another alternative will be to include this library here.
 									<exclude>org.apache.flink:flink-shaded-zookeeper-3</exclude>
+									-->
 								</excludes>
 							</artifactSet>
 						</configuration>
