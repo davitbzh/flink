@@ -1,11 +1,7 @@
 ---
-title:  "MongoDb"
-weight: 4
-type: docs
-aliases:
-- /dev/connectors/mongodb.html
-- /apis/streaming/connectors/mongodb.html
-
+title: Formats
+bookCollapseSection: true
+weight: 2
 ---
 <!--
 Licensed to the Apache Software Foundation (ASF) under one
@@ -25,9 +21,3 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -->
-
-# MongoDB format
-
-This [GitHub repository documents how to use MongoDB with Apache Flink (starting from 0.7-incubating)](https://github.com/okkam-it/flink-mongodb-test).
-
-{{< top >}}

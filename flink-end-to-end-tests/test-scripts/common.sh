@@ -21,7 +21,7 @@
 #set -Eexuo pipefail
 set -o pipefail
 
-if [[ -z $FLINK_DIR ]]; then
+if [[ -z "${FLINK_DIR:-}" ]]; then
     echo "FLINK_DIR needs to point to a Flink distribution directory"
     exit 1
 fi
@@ -417,6 +417,7 @@ function check_logs_for_exceptions {
    | grep -v "org.apache.flink.runtime.JobException: Recovery is suppressed" \
    | grep -v "WARN  akka.remote.ReliableDeliverySupervisor" \
    | grep -v "RecipientUnreachableException" \
+   | grep -v "SerializedCheckpointException.unwrap" \
    | grep -ic "exception" || true)
   if [[ ${exception_count} -gt 0 ]]; then
     echo "Found exception in log files; printing first 500 lines; see full logs for details:"
@@ -476,7 +477,7 @@ function wait_for_job_state_transition {
   echo "Waiting for job ($job) to switch from state ${initial_state} to state ${next_state} ..."
 
   while : ; do
-    N=$(grep -o "($job) switched from state ${initial_state} to ${next_state}" $FLINK_LOG_DIR/*standalonesession*.log | tail -1)
+    N=$(grep -o "($job) switched from state ${initial_state} to ${next_state}" $FLINK_LOG_DIR/*standalonesession*.log* | tail -1)
 
     if [[ -z $N ]]; then
       sleep 1
@@ -511,7 +512,7 @@ function wait_job_terminal_state {
   echo "Waiting for job ($job) to reach terminal state $expected_terminal_state ..."
 
   while : ; do
-    local N=$(grep -o "Job $job reached terminal state .*" $FLINK_LOG_DIR/*$log_file_name*.log | tail -1 || true)
+    local N=$(grep -o "Job $job reached terminal state .*" $FLINK_LOG_DIR/*$log_file_name*.log* | tail -1 || true)
     if [[ -z $N ]]; then
       sleep 1
     else
@@ -633,7 +634,7 @@ function get_job_metric {
 function get_metric_processed_records {
   OPERATOR=$1
   JOB_NAME="${2:-General purpose test job}"
-  N=$(grep ".${JOB_NAME}.$OPERATOR.numRecordsIn:" $FLINK_LOG_DIR/*taskexecutor*.log | sed 's/.* //g' | tail -1)
+  N=$(grep ".${JOB_NAME}.$OPERATOR.numRecordsIn:" $FLINK_LOG_DIR/*taskexecutor*.log* | sed 's/.* //g' | tail -1)
   if [ -z $N ]; then
     N=0
   fi
@@ -643,7 +644,7 @@ function get_metric_processed_records {
 function get_num_metric_samples {
   OPERATOR=$1
   JOB_NAME="${2:-General purpose test job}"
-  N=$(grep ".${JOB_NAME}.$OPERATOR.numRecordsIn:" $FLINK_LOG_DIR/*taskexecutor*.log | wc -l)
+  N=$(grep ".${JOB_NAME}.$OPERATOR.numRecordsIn:" $FLINK_LOG_DIR/*taskexecutor*.log* | wc -l)
   if [ -z $N ]; then
     N=0
   fi
@@ -693,7 +694,7 @@ function wait_num_of_occurence_in_logs {
     echo "Waiting for text ${text} to appear ${number} of times in logs..."
 
     while : ; do
-      N=$(grep -o "${text}" $FLINK_LOG_DIR/*${logs}*.log | wc -l)
+      N=$(grep -o "${text}" $FLINK_LOG_DIR/*${logs}*.log* | wc -l)
 
       if [ -z $N ]; then
         N=0
@@ -722,7 +723,7 @@ function wait_num_checkpoints {
     echo "Waiting for job ($JOB) to have at least $NUM_CHECKPOINTS completed checkpoints ..."
 
     while : ; do
-      N=$(grep -o "Completed checkpoint [1-9]* for job $JOB" $FLINK_LOG_DIR/*standalonesession*.log | awk '{print $3}' | tail -1)
+      N=$(grep -o "Completed checkpoint [1-9]* for job $JOB" $FLINK_LOG_DIR/*standalonesession*.log* | awk '{print $3}' | tail -1)
 
       if [ -z $N ]; then
         N=0
@@ -764,7 +765,7 @@ function expect_in_taskmanager_logs {
     local expected="$1"
     local timeout=$2
     local i=0
-    local logfile="$FLINK_LOG_DIR/flink*taskexecutor*log"
+    local logfile="$FLINK_LOG_DIR/flink*taskexecutor*log*"
 
 
     while ! grep "${expected}" ${logfile} > /dev/null; do

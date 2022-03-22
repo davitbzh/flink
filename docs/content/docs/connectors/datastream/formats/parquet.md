@@ -1,5 +1,5 @@
 ---
-title:  "Parquet files"
+title:  "Parquet"
 weight: 4
 type: docs
 aliases:
@@ -28,12 +28,16 @@ under the License.
 
 # Parquet format
 
-Flink supports reading [parquet](https://parquet.apache.org/) files and producing [Flink rows](https://nightlies.apache.org/flink/flink-docs-master/api/java/org/apache/flink/types/Row.html).
+Flink supports reading [Parquet](https://parquet.apache.org/) files and producing [Flink rows](https://nightlies.apache.org/flink/flink-docs-master/api/java/org/apache/flink/types/Row.html).
 To use the format you need to add the Flink Parquet dependency to your project:
 
 ```xml
-{{< artifact flink-parquet >}}
-```  
+<dependency>
+	<groupId>org.apache.flink</groupId>
+	<artifactId>flink-parquet</artifactId>
+	<version>{{< version >}}</version>
+</dependency>
+```
  
 This format is compatible with the new Source that can be used in both batch and streaming modes.
 Thus, you can use this format in two ways:
@@ -69,7 +73,7 @@ final DataStream<RowData> stream =
 
 **Continuous read example**:
 
-In this example we create a DataStream containing parquet records as Flink Rows that will 
+In this example we create a DataStream containing Parquet records as Flink Rows that will 
 infinitely grow as new files are added to the directory. We monitor for new files each second.
 We project the schema to read only certain fields ("f7", "f4" and "f99").  
 We read records in batches of 500 records. The first boolean parameter specifies if timestamp columns need to be interpreted as UTC.
